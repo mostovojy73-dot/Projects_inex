@@ -3,53 +3,59 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Объекты</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;700&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&display=swap">
 <style>
-:root{--ink:#22272b;--steel:#3b434a;--concrete:#e9ebed;--paper:#fff;--yellow:#f5b800;--line:#d5d9dc;--mut:#5f6a73;--ok:#2e8b57;--bad:#c0392b}
-*{box-sizing:border-box}html{background:var(--concrete)}
-body{margin:0;background:var(--concrete);color:var(--ink);font:16px/1.45 Barlow,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{background:var(--ink);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 0}
-h1{margin:0 0 12px;font:700 26px/1 "Barlow Condensed",Barlow,sans-serif;letter-spacing:.3px}
-nav{display:flex;gap:8px;overflow-x:auto;padding:0 0 14px;scrollbar-width:none}nav::-webkit-scrollbar{display:none}
-.plate{flex:none;max-width:70vw;padding:9px 16px;border:2px solid #4a545c;border-radius:8px;background:var(--steel);color:#d6dadd;font:600 18px/1.1 "Barlow Condensed",Barlow,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.plate.on{background:var(--yellow);border-color:var(--yellow);color:var(--ink)}
-.plate.add{background:transparent;border-style:dashed;color:#aab2b8}
-.stripe{height:9px;background:repeating-linear-gradient(135deg,var(--yellow) 0 10px,var(--ink) 10px 20px)}
-main{max-width:640px;margin:0 auto;padding:14px 12px 60px}
-.card{background:var(--paper);border-radius:14px;padding:14px;margin-bottom:12px}
-h2{margin:18px 4px 8px;font:700 22px/1.1 "Barlow Condensed",Barlow,sans-serif}
-.pill{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14px}
+:root{--bg:#17181b;--panel:#212227;--panel2:#2a2b31;--line:#3b3d45;--tx:#f3f4f6;--mut:#a4a8b1;--acc:#f1532b;--acc2:#ff7a45;--ok:#3fb27f;--bad:#e5484d;--ink:#17181b;--concrete:#17181b;--paper:#212227;--yellow:#f1532b}
+*{box-sizing:border-box}html{background:var(--bg)}
+body{margin:0;background:radial-gradient(120% 60% at 50% 0%,#24252b 0%,var(--bg) 70%) fixed;color:var(--tx);font:300 17px/1.5 Jost,"Futura PT",Futura,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+header{padding:calc(16px + env(safe-area-inset-top)) 18px 0}
+.brand{display:flex;align-items:center;gap:10px;color:var(--acc);font:400 22px/1 Jost,sans-serif;letter-spacing:.4px}
+h1{margin:20px 0 14px;font:400 30px/1.1 Jost,sans-serif;text-transform:uppercase;letter-spacing:.5px}
+h1 em{font-style:normal;color:var(--acc)}
+nav{display:flex;gap:8px;overflow-x:auto;padding:0 0 16px;scrollbar-width:none}nav::-webkit-scrollbar{display:none}
+.plate{flex:none;max-width:70vw;padding:9px 16px;border:1px solid var(--line);border-radius:3px;background:transparent;color:var(--tx);font:400 17px/1.1 Jost,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plate.on{border-color:var(--acc);color:var(--acc)}
+.plate.add{border-style:dashed;color:var(--mut)}
+.stripe{height:1px;background:#6f7886;margin:0 18px}
+main{max-width:640px;margin:0 auto;padding:18px 14px 60px}
+.card{background:var(--panel);border-radius:4px;padding:16px;margin-bottom:12px;box-shadow:0 14px 30px -16px rgba(0,0,0,.7)}
+h2{margin:22px 4px 10px;font:400 24px/1.1 Jost,sans-serif;text-transform:uppercase;color:var(--tx)}
+.pill{display:inline-flex;align-items:center;gap:8px;font-weight:500;font-size:16px;color:var(--tx)}
 .pill:before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c,var(--mut))}
-.addr{color:var(--mut);margin:2px 0 8px}
-.kv{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-top:1px solid var(--line)}
+.addr{color:var(--mut);margin:4px 0 10px}
+.kv{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-top:1px solid var(--line)}
 .kv span:first-child{color:var(--mut);flex:none;max-width:45%}.kv span:last-child{text-align:right;word-break:break-word}
-.doc{border-left:6px solid var(--yellow);border-radius:6px 14px 14px 6px}
+.doc{border-left:3px solid var(--acc)}
 .dh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.dt{font-weight:700;word-break:break-word}.ver{flex:none;padding:2px 9px;border-radius:6px;background:var(--yellow);font:700 15px "Barlow Condensed",Barlow,sans-serif}
-.meta{color:var(--mut);font-size:14px}.note{margin-top:4px}
-.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.dt{font-weight:500;font-size:19px;color:var(--acc);word-break:break-word}
+.ver{flex:none;padding:1px 9px;border:1px solid var(--acc);border-radius:3px;color:var(--acc);font:500 15px Jost,sans-serif}
+.meta{color:var(--mut);font-size:15px}.note{margin-top:4px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 button{font:inherit}
-.b{padding:10px 16px;border:2px solid var(--ink);border-radius:10px;background:transparent;color:var(--ink);font-weight:700}
-.b.main{background:var(--ink);color:#fff}.b.sm{padding:6px 12px;font-size:14px}
-.hist{margin-top:12px;border-top:1px dashed var(--line)}
-.old{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.old:last-child{border:0}
-.tag{font-size:13px;color:var(--mut)}
-.msg{text-align:center;color:var(--mut);padding:22px 10px}
-.sheet{position:fixed;inset:0;background:rgba(20,24,27,.55);display:flex;align-items:flex-end;z-index:5}
-.sheet form{width:100%;max-width:640px;margin:0 auto;background:var(--paper);border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
-.sheet h3{margin:0 0 4px;font:700 24px "Barlow Condensed",Barlow,sans-serif}
-label{display:block;margin:12px 0 4px;font-size:14px;color:var(--mut)}
-input{width:100%;padding:12px;border:2px solid var(--line);border-radius:10px;font:inherit;background:var(--concrete);color:var(--ink)}
-input:focus-visible,button:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;z-index:9;max-width:90vw}
+.b{padding:10px 18px;border:1px solid var(--line);border-radius:3px;background:transparent;color:var(--tx);font:500 14px Jost,sans-serif;text-transform:uppercase;letter-spacing:.6px}
+.b.main{border-color:var(--acc);color:var(--tx)}.b.main:active{background:var(--acc)}.b.sm{padding:7px 12px;font-size:13px}
+.hist{margin-top:14px;border-top:1px solid var(--line)}
+.old{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}.old:last-child{border:0}
+.old .dt{font-size:17px;color:var(--tx)}
+.tag{font-size:14px;color:var(--mut)}
+.msg{text-align:center;color:var(--mut);padding:24px 10px}
+.sheet{position:fixed;inset:0;background:rgba(8,9,11,.7);display:flex;align-items:flex-end;z-index:5}
+.sheet form{width:100%;max-width:640px;margin:0 auto;background:var(--panel);border-top:2px solid var(--acc);border-radius:6px 6px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
+.sheet h3{margin:0 0 4px;font:400 24px Jost,sans-serif;text-transform:uppercase}
+label{display:block;margin:14px 0 5px;font-size:15px;color:var(--mut)}
+input{width:100%;padding:12px;border:1px solid var(--line);border-radius:3px;font:400 17px Jost,sans-serif;background:var(--bg);color:var(--tx)}
+input::placeholder{color:#6d717a}
+input:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--acc);color:var(--tx);padding:10px 16px;border-radius:3px;z-index:9;max-width:90vw}
 .hide{display:none}
-@media(min-width:900px){main{max-width:860px}header{padding-left:max(16px,calc(50% - 430px));padding-right:16px}}
+@media(min-width:900px){main{max-width:860px}header{padding-left:max(18px,calc(50% - 430px));padding-right:18px}.stripe{margin:0 max(18px,calc(50% - 430px))}}
 </style></head><body>
-<header><h1>Объекты</h1><nav id="tabs"></nav></header><div class="stripe"></div>
+<header><div class="brand"><svg width="38" height="38" viewBox="0 0 40 40" fill="none" stroke="#f1532b" stroke-width="1.4" aria-hidden="true"><path d="M1 11V1h10M29 1h10v10M1 29v10h10M29 39h10V29"/><g stroke="none" fill="#f1532b" font-family="Jost,sans-serif" font-size="10"><text x="8" y="17">I</text><text x="24" y="17">N</text><text x="8" y="33">E</text><text x="24" y="33">X</text></g></svg><span>TECHNOLOGY</span></div>
+<h1>Объекты <em>INEX</em></h1><nav id="tabs"></nav></header><div class="stripe"></div>
 <main id="view"><div class="msg">Загрузка…</div></main>
 <div id="sheet" class="sheet hide"></div><div id="toast" class="toast hide"></div>
 <script>
-const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand();try{tg.setHeaderColor("#22272b");tg.setBackgroundColor("#e9ebed")}catch(e){}}
+const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand();try{tg.setHeaderColor("#17181b");tg.setBackgroundColor("#17181b")}catch(e){}}
 const $=id=>document.getElementById(id);
 // В веб-версии Telegram страница открыта во вложенном окне, и браузер может запретить localStorage: без защиты приложение зависало на «Загрузка…»
 const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
