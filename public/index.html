@@ -51,7 +51,9 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--yellow);outline
 <script>
 const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand();try{tg.setHeaderColor("#22272b");tg.setBackgroundColor("#e9ebed")}catch(e){}}
 const $=id=>document.getElementById(id);
-let D={objects:[],info:[],docs:[],role:"viewer"},cur=localStorage.getItem("obj")||"",open=new Set();
+// В веб-версии Telegram страница открыта во вложенном окне, и браузер может запретить localStorage: без защиты приложение зависало на «Загрузка…»
+const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+let D={objects:[],info:[],docs:[],role:"viewer"},cur=store.get("obj")||"",open=new Set();
 const isOwner=()=>D.role==="owner";
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 const fdate=s=>/^\d{4}-\d\d-\d\d$/.test(s)?s.slice(8)+"."+s.slice(5,7)+"."+s.slice(0,4):s;
@@ -59,7 +61,7 @@ const same=(a,b)=>String(a).trim().toLowerCase()===String(b).trim().toLowerCase(
 function toast(t){const x=$("toast");x.textContent=t;x.classList.remove("hide");clearTimeout(toast.t);toast.t=setTimeout(()=>x.classList.add("hide"),2600)}
 
 async function api(path,opt={}){
-  const r=await fetch(path,{...opt,headers:{"Content-Type":"application/json","Authorization":tg&&tg.initData?"tma "+tg.initData:"Bearer "+(localStorage.getItem("tok")||""),...(opt.headers||{})}});
+  const r=await fetch(path,{...opt,headers:{"Content-Type":"application/json","Authorization":tg&&tg.initData?"tma "+tg.initData:"Bearer "+(store.get("tok")||""),...(opt.headers||{})}});
   const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.error||"error"),{status:r.status,body:j});return j;
 }
 const post=(p,b)=>api(p,{method:"POST",body:JSON.stringify(b)});
@@ -74,7 +76,7 @@ async function load(){
 async function showLogin(){
   const v=$("view");v.textContent="";const m=el("div","msg","Войдите через Telegram, чтобы открыть объекты");v.appendChild(m);
   try{const {bot}=await api("/api/config");if(!bot)throw 0;
-    window.onTg=async u=>{try{const r=await post("/api/login",u);localStorage.setItem("tok",r.token);load()}catch(e){toast("Не удалось войти")}};
+    window.onTg=async u=>{try{const r=await post("/api/login",u);store.set("tok",r.token);load()}catch(e){toast("Не удалось войти")}};
     const s=document.createElement("script");s.async=true;s.src="https://telegram.org/js/telegram-widget.js?22";
     s.dataset.telegramLogin=bot;s.dataset.size="large";s.dataset.radius="10";s.dataset.onauth="onTg(user)";m.appendChild(el("div")).appendChild(s)}
   catch(e){m.textContent="Не удалось подготовить вход. Откройте приложение через бота в Telegram."}
@@ -100,7 +102,7 @@ const statusColor=s=>/работ|идёт|идет/i.test(s)?"var(--ok)":/пау
 
 function render(){
   const T=$("tabs");T.textContent="";
-  D.objects.forEach(o=>{const b=el("button","plate"+(same(o.name,cur)?" on":""),o.name);b.onclick=()=>{cur=o.name;localStorage.setItem("obj",cur);render()};T.appendChild(b)});
+  D.objects.forEach(o=>{const b=el("button","plate"+(same(o.name,cur)?" on":""),o.name);b.onclick=()=>{cur=o.name;store.set("obj",cur);render()};T.appendChild(b)});
   if(isOwner()){const b=el("button","plate add","+ Объект");b.onclick=()=>ask("Новый объект",[{k:"name",label:"Название",ph:"Например: ЖК Северный, корпус 2",req:1,max:80},{k:"addr",label:"Адрес",max:200},{k:"status",label:"Статус",val:"В работе",list:["В работе","Приостановлен","Сдан"],max:40}],v=>post("/api/object",v));T.appendChild(b)}
   const V=$("view");V.textContent="";
   const o=D.objects.find(x=>same(x.name,cur));
