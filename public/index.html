@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Объекты</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;700&display=swap">
+<style>
+:root{--ink:#22272b;--steel:#3b434a;--concrete:#e9ebed;--paper:#fff;--yellow:#f5b800;--line:#d5d9dc;--mut:#5f6a73;--ok:#2e8b57;--bad:#c0392b}
+*{box-sizing:border-box}html{background:var(--concrete)}
+body{margin:0;background:var(--concrete);color:var(--ink);font:16px/1.45 Barlow,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--ink);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 0}
+h1{margin:0 0 12px;font:700 26px/1 "Barlow Condensed",Barlow,sans-serif;letter-spacing:.3px}
+nav{display:flex;gap:8px;overflow-x:auto;padding:0 0 14px;scrollbar-width:none}nav::-webkit-scrollbar{display:none}
+.plate{flex:none;max-width:70vw;padding:9px 16px;border:2px solid #4a545c;border-radius:8px;background:var(--steel);color:#d6dadd;font:600 18px/1.1 "Barlow Condensed",Barlow,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plate.on{background:var(--yellow);border-color:var(--yellow);color:var(--ink)}
+.plate.add{background:transparent;border-style:dashed;color:#aab2b8}
+.stripe{height:9px;background:repeating-linear-gradient(135deg,var(--yellow) 0 10px,var(--ink) 10px 20px)}
+main{max-width:640px;margin:0 auto;padding:14px 12px 60px}
+.card{background:var(--paper);border-radius:14px;padding:14px;margin-bottom:12px}
+h2{margin:18px 4px 8px;font:700 22px/1.1 "Barlow Condensed",Barlow,sans-serif}
+.pill{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14px}
+.pill:before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c,var(--mut))}
+.addr{color:var(--mut);margin:2px 0 8px}
+.kv{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-top:1px solid var(--line)}
+.kv span:first-child{color:var(--mut);flex:none;max-width:45%}.kv span:last-child{text-align:right;word-break:break-word}
+.doc{border-left:6px solid var(--yellow);border-radius:6px 14px 14px 6px}
+.dh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.dt{font-weight:700;word-break:break-word}.ver{flex:none;padding:2px 9px;border-radius:6px;background:var(--yellow);font:700 15px "Barlow Condensed",Barlow,sans-serif}
+.meta{color:var(--mut);font-size:14px}.note{margin-top:4px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+button{font:inherit}
+.b{padding:10px 16px;border:2px solid var(--ink);border-radius:10px;background:transparent;color:var(--ink);font-weight:700}
+.b.main{background:var(--ink);color:#fff}.b.sm{padding:6px 12px;font-size:14px}
+.hist{margin-top:12px;border-top:1px dashed var(--line)}
+.old{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.old:last-child{border:0}
+.tag{font-size:13px;color:var(--mut)}
+.msg{text-align:center;color:var(--mut);padding:22px 10px}
+.sheet{position:fixed;inset:0;background:rgba(20,24,27,.55);display:flex;align-items:flex-end;z-index:5}
+.sheet form{width:100%;max-width:640px;margin:0 auto;background:var(--paper);border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
+.sheet h3{margin:0 0 4px;font:700 24px "Barlow Condensed",Barlow,sans-serif}
+label{display:block;margin:12px 0 4px;font-size:14px;color:var(--mut)}
+input{width:100%;padding:12px;border:2px solid var(--line);border-radius:10px;font:inherit;background:var(--concrete);color:var(--ink)}
+input:focus-visible,button:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;z-index:9;max-width:90vw}
+.hide{display:none}
+</style></head><body>
+<header><h1>Объекты</h1><nav id="tabs"></nav></header><div class="stripe"></div>
+<main id="view"><div class="msg">Загрузка…</div></main>
+<div id="sheet" class="sheet hide"></div><div id="toast" class="toast hide"></div>
+<script>
+const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand();try{tg.setHeaderColor("#22272b");tg.setBackgroundColor("#e9ebed")}catch(e){}}
+const $=id=>document.getElementById(id);
+let D={objects:[],info:[],docs:[],role:"viewer"},cur=localStorage.getItem("obj")||"",open=new Set();
+const isOwner=()=>D.role==="owner";
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const fdate=s=>/^\d{4}-\d\d-\d\d$/.test(s)?s.slice(8)+"."+s.slice(5,7)+"."+s.slice(0,4):s;
+const same=(a,b)=>String(a).trim().toLowerCase()===String(b).trim().toLowerCase();
+function toast(t){const x=$("toast");x.textContent=t;x.classList.remove("hide");clearTimeout(toast.t);toast.t=setTimeout(()=>x.classList.add("hide"),2600)}
+
+async function api(path,opt={}){
+  const r=await fetch(path,{...opt,headers:{"Content-Type":"application/json","Authorization":"tma "+(tg?tg.initData:""),...(opt.headers||{})}});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.error||"error"),{status:r.status,body:j});return j;
+}
+const post=(p,b)=>api(p,{method:"POST",body:JSON.stringify(b)});
+async function load(){
+  try{D=await api("/api/data");if(!D.objects.some(o=>same(o.name,cur)))cur=D.objects[0]?.name||"";render()}
+  catch(e){const v=$("view");v.textContent="";const m=el("div","msg");
+    m.textContent=e.status===403?"Нет доступа. Ваш Telegram ID: "+e.body.id+". Отправьте его администратору.":e.status===401?"Откройте приложение через кнопку «Объекты» в Telegram-боте.":"Не удалось загрузить данные. Попробуйте ещё раз.";v.appendChild(m)}
+}
+
+// форма внизу экрана: fields = [{k,label,ph,list,val,req}]
+function ask(title,fields,send){
+  const s=$("sheet");s.textContent="";s.classList.remove("hide");
+  const f=el("form");f.appendChild(el("h3","",title));const inp={};
+  fields.forEach(x=>{f.appendChild(el("label","",x.label));const i=el("input");i.placeholder=x.ph||"";i.value=x.val||"";i.required=!!x.req;i.maxLength=x.max||300;
+    if(x.list){const id="dl"+x.k;i.setAttribute("list",id);const dl=el("datalist");dl.id=id;x.list.forEach(v=>{const o=el("option");o.value=v;dl.appendChild(o)});f.appendChild(dl)}
+    inp[x.k]=i;f.appendChild(i)});
+  const row=el("div","btns"),ok=el("button","b main","Сохранить"),no=el("button","b","Отмена");ok.type="submit";no.type="button";
+  no.onclick=()=>s.classList.add("hide");row.append(ok,no);f.appendChild(row);s.appendChild(f);
+  f.onsubmit=async e=>{e.preventDefault();ok.disabled=true;const v={};for(const k in inp)v[k]=inp[k].value.trim();
+    try{await send(v);s.classList.add("hide");toast("Сохранено");await load()}catch(er){ok.disabled=false;toast(er.message==="exists"?"Такой объект уже есть":"Не удалось сохранить")}};
+  (Object.values(inp).find(i=>!i.value)||Object.values(inp)[0]).focus();
+}
+async function dl(d){
+  try{const {url}=await api("/api/link/"+d.id);const u=location.origin+url;tg&&tg.openLink?tg.openLink(u):window.open(u,"_blank")}
+  catch(e){toast("Не удалось получить файл")}
+}
+const statusColor=s=>/работ|идёт|идет/i.test(s)?"var(--ok)":/пауз|стоп|заморож/i.test(s)?"var(--bad)":"var(--mut)";
+
+function render(){
+  const T=$("tabs");T.textContent="";
+  D.objects.forEach(o=>{const b=el("button","plate"+(same(o.name,cur)?" on":""),o.name);b.onclick=()=>{cur=o.name;localStorage.setItem("obj",cur);render()};T.appendChild(b)});
+  if(isOwner()){const b=el("button","plate add","+ Объект");b.onclick=()=>ask("Новый объект",[{k:"name",label:"Название",ph:"Например: ЖК Северный, корпус 2",req:1,max:80},{k:"addr",label:"Адрес",max:200},{k:"status",label:"Статус",val:"В работе",list:["В работе","Приостановлен","Сдан"],max:40}],v=>post("/api/object",v));T.appendChild(b)}
+  const V=$("view");V.textContent="";
+  const o=D.objects.find(x=>same(x.name,cur));
+  if(!o){V.appendChild(el("div","msg",isOwner()?"Объектов пока нет. Нажмите «+ Объект», чтобы добавить первый.":"Объектов пока нет."));return}
+
+  const c=el("div","card"),p=el("div","pill",o.status||"Без статуса");p.style.setProperty("--c",statusColor(o.status));c.appendChild(p);
+  if(o.addr)c.appendChild(el("div","addr",o.addr));
+  D.info.filter(i=>same(i.obj,o.name)).forEach(i=>{const r=el("div","kv");r.append(el("span","",i.key),el("span","",i.val));c.appendChild(r)});
+  if(isOwner()){const b=el("button","b sm","Добавить или изменить поле");b.style.marginTop="10px";
+    b.onclick=()=>ask("Информация по объекту",[{k:"key",label:"Поле",ph:"Прораб, телефон, заказчик, срок сдачи…",req:1,list:[...new Set(D.info.map(i=>i.key))],max:60},{k:"val",label:"Значение",max:500}],v=>post("/api/info",{obj:o.name,...v}));c.appendChild(b)}
+  V.appendChild(c);
+
+  // документы: группируем по разделу и названию, свежая версия сверху, старые в «Истории»
+  const docs=D.docs.filter(d=>same(d.obj,o.name)),secs=[];
+  docs.forEach(d=>{if(!secs.includes(d.section))secs.push(d.section)});
+  const addDoc=(title,section)=>ask(title?"Новая версия: "+title:"Новый документ",[
+    ...(title?[]:[{k:"title",label:"Название документа",ph:"Например: План 2 этажа",req:1,max:120},{k:"section",label:"Раздел",val:section||"",list:[...new Set(["Чертежи","Сметы","Договоры","Акты","Фото",...secs])],max:40}]),
+    {k:"url",label:"Ссылка на файл (Google Диск или Яндекс Диск)",ph:"https://",req:1,max:1000},{k:"note",label:"Что изменилось (необязательно)",max:300}],
+    v=>post("/api/doc",{obj:o.name,title,section,...v}));
+  const hd=el("div");hd.style.cssText="display:flex;justify-content:space-between;align-items:baseline";
+  hd.appendChild(el("h2","","Документы"));
+  if(isOwner()){const b=el("button","b sm","+ Документ");b.onclick=()=>addDoc();hd.appendChild(b)}V.appendChild(hd);
+  if(!docs.length)V.appendChild(el("div","msg",isOwner()?"Здесь пока нет документов. Добавьте ссылку на файл кнопкой «+ Документ».":"Документов пока нет."));
+  secs.forEach(sec=>{
+    V.appendChild(el("h2","",sec)).style.fontSize="18px";
+    const groups={};docs.filter(d=>d.section===sec).forEach(d=>(groups[d.title.toLowerCase()]||=[]).push(d));
+    Object.values(groups).forEach(g=>{
+      g.sort((a,b)=>b.ver-a.ver);const [last,...old]=g,k=o.name+"|"+last.title.toLowerCase();
+      const card=el("div","card doc"),h=el("div","dh");h.append(el("div","dt",last.title),el("div","ver","v"+last.ver));card.appendChild(h);
+      card.appendChild(el("div","meta","Загружено "+fdate(last.date)+(last.who?", "+last.who:"")));
+      if(last.note)card.appendChild(el("div","note",last.note));
+      const bs=el("div","btns"),d1=el("button","b main","Скачать");d1.onclick=()=>dl(last);bs.appendChild(d1);
+      if(old.length){const hb=el("button","b",(open.has(k)?"Скрыть историю":"История")+" ("+old.length+")");hb.onclick=()=>{open.has(k)?open.delete(k):open.add(k);render()};bs.appendChild(hb)}
+      if(isOwner()){const nb=el("button","b","Новая версия");nb.onclick=()=>addDoc(last.title,last.section);bs.appendChild(nb)}
+      card.appendChild(bs);
+      if(old.length&&open.has(k)){const hs=el("div","hist");old.forEach((d,i)=>{
+        const r=el("div","old"),l=el("div");l.appendChild(el("div","dt","Версия "+d.ver+" от "+fdate(d.date)));
+        l.appendChild(el("div","tag","Заменена версией "+(i?old[i-1].ver:last.ver)+" от "+fdate((i?old[i-1]:last).date)+(d.note?". "+d.note:"")));
+        const b=el("button","b sm","Скачать");b.onclick=()=>dl(d);r.append(l,b);hs.appendChild(r)});card.appendChild(hs)}
+      V.appendChild(card);
+    });
+  });
+}
+load();
+</script></body></html>
