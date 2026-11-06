@@ -43,6 +43,7 @@ input{width:100%;padding:12px;border:2px solid var(--line);border-radius:10px;fo
 input:focus-visible,button:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;z-index:9;max-width:90vw}
 .hide{display:none}
+@media(min-width:900px){main{max-width:860px}header{padding-left:max(16px,calc(50% - 430px));padding-right:16px}}
 </style></head><body>
 <header><h1>Объекты</h1><nav id="tabs"></nav></header><div class="stripe"></div>
 <main id="view"><div class="msg">Загрузка…</div></main>
@@ -58,16 +59,26 @@ const same=(a,b)=>String(a).trim().toLowerCase()===String(b).trim().toLowerCase(
 function toast(t){const x=$("toast");x.textContent=t;x.classList.remove("hide");clearTimeout(toast.t);toast.t=setTimeout(()=>x.classList.add("hide"),2600)}
 
 async function api(path,opt={}){
-  const r=await fetch(path,{...opt,headers:{"Content-Type":"application/json","Authorization":"tma "+(tg?tg.initData:""),...(opt.headers||{})}});
+  const r=await fetch(path,{...opt,headers:{"Content-Type":"application/json","Authorization":tg&&tg.initData?"tma "+tg.initData:"Bearer "+(localStorage.getItem("tok")||""),...(opt.headers||{})}});
   const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.error||"error"),{status:r.status,body:j});return j;
 }
 const post=(p,b)=>api(p,{method:"POST",body:JSON.stringify(b)});
 async function load(){
   try{D=await api("/api/data");if(!D.objects.some(o=>same(o.name,cur)))cur=D.objects[0]?.name||"";render()}
   catch(e){const v=$("view");v.textContent="";const m=el("div","msg");
+    if(e.status===401&&!(tg&&tg.initData))return showLogin();
     m.textContent=e.status===403?"Нет доступа. Ваш Telegram ID: "+e.body.id+". Отправьте его администратору.":e.status===401?"Откройте приложение через кнопку «Объекты» в Telegram-боте.":"Не удалось загрузить данные. Попробуйте ещё раз.";v.appendChild(m)}
 }
 
+// Вход с компьютера и из браузера: официальная кнопка «Войти через Telegram»
+async function showLogin(){
+  const v=$("view");v.textContent="";const m=el("div","msg","Войдите через Telegram, чтобы открыть объекты");v.appendChild(m);
+  try{const {bot}=await api("/api/config");if(!bot)throw 0;
+    window.onTg=async u=>{try{const r=await post("/api/login",u);localStorage.setItem("tok",r.token);load()}catch(e){toast("Не удалось войти")}};
+    const s=document.createElement("script");s.async=true;s.src="https://telegram.org/js/telegram-widget.js?22";
+    s.dataset.telegramLogin=bot;s.dataset.size="large";s.dataset.radius="10";s.dataset.onauth="onTg(user)";m.appendChild(el("div")).appendChild(s)}
+  catch(e){m.textContent="Не удалось подготовить вход. Откройте приложение через бота в Telegram."}
+}
 // форма внизу экрана: fields = [{k,label,ph,list,val,req}]
 function ask(title,fields,send){
   const s=$("sheet");s.textContent="";s.classList.remove("hide");

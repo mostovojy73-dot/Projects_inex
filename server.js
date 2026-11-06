@@ -53,8 +53,25 @@ function verify(initData) { // подпись Telegram: только насто�
   if (Date.now() / 1000 - Number(p.get('auth_date')) > 86400) return null;
   try { return JSON.parse(p.get('user')); } catch { return null; }
 }
+// Вход не из Telegram (ПК, браузер): виджет «Войти через Telegram», затем подписанная сессия на 30 дней
+function verifyWidget(d) {
+  const { hash, ...rest } = d || {};
+  if (!hash || !rest.id) return null;
+  const str = Object.keys(rest).sort().map(k => `${k}=${rest[k]}`).join('\n');
+  const key = crypto.createHash('sha256').update(BOT_TOKEN).digest();
+  const a = Buffer.from(crypto.createHmac('sha256', key).update(str).digest('hex')), b = Buffer.from(String(hash));
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  if (Date.now() / 1000 - Number(rest.auth_date) > 86400) return null;
+  return { id: String(rest.id), first_name: rest.first_name || '' };
+}
+function readSession(t) {
+  const [b, s] = String(t).split('.');
+  if (!b || !s || sign(b, 'sess') !== s) return null;
+  try { const j = JSON.parse(Buffer.from(b, 'base64url')); return j.exp > Date.now() ? { id: j.id, first_name: j.name } : null; } catch { return null; }
+}
 const guard = (req, res, next) => {
-  const h = req.get('authorization') || '', u = h.startsWith('tma ') ? verify(h.slice(4)) : null;
+  const h = req.get('authorization') || '';
+  const u = h.startsWith('tma ') ? verify(h.slice(4)) : h.startsWith('Bearer ') ? readSession(h.slice(7)) : null;
   if (!u) return res.status(401).json({ error: 'auth' });
   const id = String(u.id);
   req.role = OWNERS.includes(id) ? 'owner' : VIEWERS.includes(id) ? 'viewer' : null;
@@ -65,7 +82,7 @@ const owner = (req, res, next) => (req.role === 'owner' ? next() : res.status(40
 const wrap = fn => (req, res) => fn(req, res).catch(e => { console.error(e.message); res.status(500).json({ error: 'server' }); });
 
 // Ссылки на скачивание живут 10 минут и подписаны сервером
-const sign = s => crypto.createHmac('sha256', 'dl:' + BOT_TOKEN).update(s).digest('base64url');
+const sign = (s, p = 'dl') => crypto.createHmac('sha256', `${p}:${BOT_TOKEN}`).update(s).digest('base64url');
 const mkToken = id => { const b = Buffer.from(JSON.stringify({ id, exp: Date.now() + 600000 })).toString('base64url'); return `${b}.${sign(b)}`; };
 function readToken(t) {
   const [b, s] = String(t).split('.');
@@ -78,6 +95,14 @@ app.use(express.json({ limit: '20kb' }));
 app.get('/health', (_, res) => res.send('ok'));
 app.use(express.static('public', { setHeaders: (res, p) => res.setHeader('Cache-Control', p.endsWith('.html') ? 'no-cache' : 'public, max-age=86400') }));
 
+let botName = process.env.BOT_USERNAME || '';
+app.get('/api/config', (_, res) => res.json({ bot: botName }));
+app.post('/api/login', (req, res) => {
+  const u = verifyWidget(Object.fromEntries(Object.entries(req.body || {}).map(([k, v]) => [k, String(v)])));
+  if (!u) return res.status(401).json({ error: 'auth' });
+  const b = Buffer.from(JSON.stringify({ id: u.id, name: u.first_name, exp: Date.now() + 30 * 864e5 })).toString('base64url');
+  res.json({ token: `${b}.${sign(b, 'sess')}` });
+});
 app.get('/api/data', guard, wrap(async (req, res) => res.json({ ...(await readAll()), role: req.role })));
 
 app.post('/api/object', guard, owner, wrap(async (req, res) => {
@@ -140,6 +165,7 @@ if (SELF_PING_URL) { const ping = () => fetch(SELF_PING_URL).catch(() => {}); se
 const port = process.env.PORT || 3000;
 app.listen(port, async () => {
   console.log('Сервер запущен на порту', port);
+  if (!botName) try { botName = (await (await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMe`)).json()).result?.username || ''; } catch (e) { console.error('getMe:', e.message); }
   if (WEBAPP_URL) try {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setChatMenuButton`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ menu_button: { type: 'web_app', text: 'Объекты', web_app: { url: WEBAPP_URL } } }) });
